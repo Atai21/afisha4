@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from main.serializers import MovieListSerializer
-from .models import Movie
+from main.serializers import MovieListSerializer, GenreListSerializer
+from .models import Movie, Genre
 from rest_framework import status
 @api_view(['GET'])
 def get_data(request):
@@ -27,4 +27,12 @@ def movie_detail_view(request, id):
         return Response(data={'message': 'Product not found'},
                         status=status.HTTP_404_NOT_FOUND)
     data = MovieListSerializer(movie).data
+    return Response(data=data)
+
+@api_view(['GET'])
+def genres_view(request):
+    genres = Genre.objects.all()
+
+    data = GenreListSerializer(genres, many=True).data
+
     return Response(data=data)
