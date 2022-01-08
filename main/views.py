@@ -23,23 +23,40 @@ def movie_list_view(request):
         print(request.data)
         title = request.data['title']
         description = request.data['description']
-        genre_id = request.data['genre_id']
-        movies = Movie.objects.create(
+        cinema_id = request.data['cinema_id']
+        movie = Movie.objects.create(
             title=title,
             description=description,
-            genre_id=genre_id
+            cinema_id=cinema_id
         )
+        movie.genres.set(request.data['genres'])
+        movie.save()
         return Response(data={'message': 'OK'})
 
-@api_view(['GET'])
+@api_view(['GET', 'PUT', 'DELETE'])
 def movie_detail_view(request, id):
-            try:
-                movie = Movie.objects.get(id=id)
-            except Movie.DoesNotExist:
-                return Response(data={'message': 'Product not found'},
+    try:
+        movie = Movie.objects.get(id=id)
+    except Movie.DoesNotExist:
+        return Response(data={'message': 'Product not found'},
                                 status=status.HTTP_404_NOT_FOUND)
-            data = MovieListSerializer(movie).data
-            return Response(data=data)
+    if request.method == 'GET':
+        data = MovieListSerializer(movie).data
+        return Response(data=data)
+    elif request.method == 'DELETE':
+        movie.delete()
+        return Response(data={'message': 'Movie Deleted'})
+    else:
+        title = request.data['title']
+        description = request.data['description']
+        cinema_id = request.data['cinema_id']
+        genres = request.data['genres']
+        movie.title = title
+        movie.description = description
+        movie.cinema_id = cinema_id
+        movie.genres.set(genres)
+        movie.save()
+        return Response(data=MovieListSerializer(movie).data)
 
 @api_view(['GET'])
 def genres_view(request):
