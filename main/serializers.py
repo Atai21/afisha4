@@ -1,7 +1,9 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
 from main.models import Movie, Review
 from rest_framework import serializers
-from main.models import Movie, Genre
+from main.models import Movie, Genre, Cinema
 
 class GenreListSerializer(serializers.ModelSerializer):
     class Meta:
@@ -29,3 +31,33 @@ class MovieListSerializer(serializers.ModelSerializer):
 
     def get_reviews(self, obj):
         return ReviewListSerializer(obj.reviews, many=True).data
+
+class MovieValidateSerializer(serializers.Serializer):
+    title = serializers.CharField(min_length=2, max_length=50)
+    description = serializers.CharField(max_length=200, required=False)
+    cinema_id = serializers.IntegerField()
+    genres = serializers.ListField(child=serializers.IntegerField())
+
+    def validate_title(self, title):
+        movies = Movie.objects.filter(title=title)
+        if movies.count()>0:
+            raise ValidationError('Movie with this name already exists!')
+
+    def validate_cinema_id(self, cinema_id):
+        try:
+            Cinema.objects.get(id=cinema_id)
+        except Cinema.DoesNotExist:
+            raise ValidationError("cinema_id not found!")
+
+    def validate(self, attrs):
+        cinema_id = attrs['cinema_id']
+        try:
+            Cinema.objects.get(id=cinema_id)
+        except Cinema.DoesNotExist:
+            raise ValidationError("cinema_id not found")
+
+class MovieDetailValidateSerializer(serializers.Serializer):
+    title = serializers.CharField(min_length=2, max_length=50)
+    description = serializers.CharField(max_length=200, required=False)
+    cinema_id = serializers.IntegerField()
+    genres = serializers.ListField(child=serializers.IntegerField())

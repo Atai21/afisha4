@@ -1,6 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from main.serializers import MovieListSerializer, GenreListSerializer
+from main.serializers import MovieListSerializer, GenreListSerializer, MovieValidateSerializer, \
+    MovieDetailValidateSerializer
 from .models import Movie, Genre
 from rest_framework import status
 @api_view(['GET'])
@@ -21,6 +22,10 @@ def movie_list_view(request):
         return Response(data=data)
     elif request.method == 'POST':
         print(request.data)
+        serializer = MovieValidateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={'errors': serializer.errors},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
         title = request.data['title']
         description = request.data['description']
         cinema_id = request.data['cinema_id']
@@ -47,6 +52,10 @@ def movie_detail_view(request, id):
         movie.delete()
         return Response(data={'message': 'Movie Deleted'})
     else:
+        serializer = MovieDetailValidateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(data={'errors': serializer.errors},
+                            status=status.HTTP_406_NOT_ACCEPTABLE)
         title = request.data['title']
         description = request.data['description']
         cinema_id = request.data['cinema_id']
