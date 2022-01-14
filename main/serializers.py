@@ -4,6 +4,7 @@ from rest_framework.exceptions import ValidationError
 from main.models import Movie, Review
 from rest_framework import serializers
 from main.models import Movie, Genre, Cinema
+from django.contrib.auth.models import User
 
 class GenreListSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,7 +23,7 @@ class MovieListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Movie
         #fields = '__all__'
-        fields = ['id', 'title', 'description', 'cinema', 'genres', 'reviews']
+        fields = ['id', 'user', 'title', 'description', 'cinema', 'genres', 'reviews']
     def get_cinema(self, obj):
         return obj.cinema.name
 
@@ -61,3 +62,11 @@ class MovieDetailValidateSerializer(serializers.Serializer):
     description = serializers.CharField(max_length=200, required=False)
     cinema_id = serializers.IntegerField()
     genres = serializers.ListField(child=serializers.IntegerField())
+
+class RegisterValidateSerializer(serializers.Serializer):
+    username = serializers.CharField(min_length=2, max_length=10)
+
+    def validate_username(self, username):
+        users = User.objects.filter(username=username)
+        if users.count()>0:
+            raise ValidationError('User with this name already exists!')
